@@ -3,9 +3,13 @@ package com.efeakif.intibak_control.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.efeakif.intibak_control.enums.CourseType;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,10 +39,13 @@ public class Course {
 
     private int practiceHours;
 
-    @Column(nullable = false, length = 8)
+    @Column(nullable = false, length = 9)
     private String academicYear;
 
     private int theoryHours;
+
+    @Enumerated(EnumType.STRING)
+    private CourseType courseType;
 
     private double localCredit;
 

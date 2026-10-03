@@ -40,14 +40,13 @@ public class WeeklyExemptionReport {
     @Column(nullable = false)
     private Coverage coverage;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String sourceContent;
 
     @Column(nullable = false)
     private int sourceWeekNumber;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String matchedWeekContent;
 
     @ManyToOne

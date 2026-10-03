@@ -29,7 +29,7 @@ public class WeeklyContent {
     @Column(nullable = false)
     private int weekNumber;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
 }
