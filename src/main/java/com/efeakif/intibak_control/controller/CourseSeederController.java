@@ -1,9 +1,8 @@
 package com.efeakif.intibak_control.controller;
 
-import org.hibernate.annotations.Fetch;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+
 import org.springframework.web.bind.annotation.RestController;
 
 import com.efeakif.intibak_control.service.ErciyesScrapingService;
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/courses")
-public class CourseSeedeController {
+public class CourseSeederController {
 
     private final ErciyesScrapingService erciyesScrapingService;
 

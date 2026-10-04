@@ -104,7 +104,7 @@ public class ErciyesScrapingService {
 
                 String description = tds.get(1).text();
 
-                if (description.isBlank())
+                if (description.isBlank() || description.length() < 3)
                     continue;
 
                 int weekNumber = Integer.parseInt(tds.get(0).text());
