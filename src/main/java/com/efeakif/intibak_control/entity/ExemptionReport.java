@@ -13,7 +13,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -27,14 +26,39 @@ public class ExemptionReport {
     @Column(name = "exemption_report_id")
     private int id;
 
+    @Column(nullable = false)
     private String firstName;
 
+    @Column(nullable = false)
     private String lastName;
 
-    @Lob
+    @Column(nullable = false)
+    private String university;
+
+    @Column(nullable = false)
+    private String sourceCourseName;
+
+    @Column(nullable = false)
+    private String targetCourseName;
+
+    @Column(nullable = false)
+    private String sourceAkts;
+
+    @Column(nullable = false)
+    private String targetAkts;
+
+     @Column(nullable = false)
+     private String sourceGrade;
+
+      @Column(nullable = false)
+      private String targetGrade;
+
+    
+
+    @Column(columnDefinition = "TEXT")
     private String llmReport;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String missingTopics;
 
     @Column(nullable = false)
