@@ -1,4 +1,4 @@
-package com.efeakif.intibak_control.service;
+package com.efeakif.intibak_control.service.seeding;
 
 import java.io.IOException;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.jsoup.nodes.Element;
 
@@ -15,18 +16,22 @@ import com.efeakif.intibak_control.enums.CourseType;
 import com.efeakif.intibak_control.repository.CourseRepo;
 
 import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ErciyesScrapingService {
+public class ErciyesScrapingSeedingService {
 
     private final CourseRepo courseRepo;
 
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
 
+    @Value("${erciyesUrl}")
+    private String connectionUrl;
+
     @Transactional
-    public void scrapeAndSeedtheCirriculum(String connectionUrl, String academicYear) {
+    public void scrapeAndSeedtheCirriculum(String academicYear) {
 
         try {
 
