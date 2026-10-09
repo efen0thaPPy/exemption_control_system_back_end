@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import com.efeakif.intibak_control.service.PdfExtractionService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class PdfExtractionController {
         try {
 
             if (file == null || file.isEmpty())
-                return ResponseEntity.badRequest().body("File can't be empty");
+                return ResponseEntity.badRequest().body("file can't be empty");
 
             String text = pdfExtractionService.extractRawTextFromPdf(file);
             return ResponseEntity.ok(text);
