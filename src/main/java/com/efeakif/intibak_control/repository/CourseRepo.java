@@ -13,4 +13,6 @@ public interface CourseRepo extends JpaRepository<Course, Integer> {
     List<Course> findByAcademicYearAndCourseCode(@Param("academicYear") String academicYear,
             @Param("courseCode") String courseCode);
 
+    List<Course> findByAcademicYear(String academicYear);
+
 }

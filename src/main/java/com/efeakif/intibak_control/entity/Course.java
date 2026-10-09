@@ -18,9 +18,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "courses", uniqueConstraints = {
         @UniqueConstraint(name = "uk_course_year", columnNames = { "course_code", "academic_year" }) })
 
@@ -50,9 +53,6 @@ public class Course {
     private double localCredit;
 
     private double akts;
-
-    @ManyToMany(mappedBy = "courses")
-    private List<Student> students;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WeeklyContent> weeklyContents = new ArrayList<>();

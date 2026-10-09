@@ -2,7 +2,6 @@ package com.efeakif.intibak_control.enums;
 
 import java.util.Locale;
 
-
 public enum CourseType {
     MANDATORY("Zorunlu"), ELECTIVE("Seçmeli");
 
@@ -16,17 +15,16 @@ public enum CourseType {
         return turkishLabel;
     }
 
-    public static CourseType fromString(String text){
-        if(text==null)
+    public static CourseType fromString(String text) {
+        if (text == null)
             return MANDATORY;
 
-        String cleaned=text.trim().toLowerCase(Locale.forLanguageTag("tr"));
+        String cleaned = text.trim().toLowerCase(Locale.forLanguageTag("tr"));
 
-        if(cleaned.contains("seç")||cleaned.contains("s"))
+        if (cleaned.contains("seç") || cleaned.contains("s") || cleaned.contains("e"))
             return ELECTIVE;
 
         return MANDATORY;
-
 
     }
 

@@ -1,8 +1,11 @@
 package com.efeakif.intibak_control.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum Grade {
     AA, BA, BB, CB, CC, DC, DD, FD, FF, S, U, M, ET,;
 
+    @JsonCreator
     public static Grade mapGrades(String text) {
         return switch (text.trim().toUpperCase()) {
             case "AA", "A+", "A" -> AA;
