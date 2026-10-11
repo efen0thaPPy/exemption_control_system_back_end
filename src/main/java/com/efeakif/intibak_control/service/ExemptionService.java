@@ -200,7 +200,7 @@ public class ExemptionService {
    public CourseContentDto analyzeCourseContents(MultipartFile contents) throws IOException {
 
       String contentText = pdfExtractionService.extractRawTextFromPdf(contents);
-      CourseContentDto courseContentDto = llmService.converse(AiModel.gemini36, COURSE_CONTENT_MAPPER, contentText,
+      CourseContentDto courseContentDto = llmService.converse(AiModel.llama31, COURSE_CONTENT_MAPPER, contentText,
             CourseContentDto.class);
 
       return courseContentDto;
