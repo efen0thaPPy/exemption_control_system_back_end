@@ -27,7 +27,7 @@ public class VectorStoreService {
 
         for (Course course : courses) {
             List<String> topics = course.getWeeklyContents().stream().map(x -> x.getDescription()).toList();
-            String textToEmbed = String.format("CourseName: %s, Descriptions: %s", course.getCourseName(), topics);
+            String textToEmbed = course.getCourseName() + "\n\n" + String.join(", ", topics);
             Map<String, Object> metadata = Map.of(
                     "courseId", course.getId(),
                     "courseName", course.getCourseName(),
@@ -40,14 +40,19 @@ public class VectorStoreService {
 
     }
 
-    public List<Document> findSimilarCourses(String name, String descriptions) {
+    public List<Document> findSimilarCourses(String name, String descriptions, String academicYear) {
 
-        SearchRequest searchRequest = SearchRequest.builder()
-                .query(String.format("CourseName: %s, Descriptions: %s",
-                        name,
-                        descriptions))
+        SearchRequest.Builder searchRequestBuilder = SearchRequest.builder()
+                .query(name + "\n\n" + descriptions)
                 .topK(5)
-                .similarityThreshold(0.70).build();
+                .similarityThreshold(0.60);
+
+        if (academicYear != null && !academicYear.isBlank()) {
+
+            searchRequestBuilder.filterExpression(String.format("academicYear=='%s'", academicYear));
+        }
+
+        SearchRequest searchRequest = searchRequestBuilder.build();
 
         return vectorStore.similaritySearch(searchRequest);
 

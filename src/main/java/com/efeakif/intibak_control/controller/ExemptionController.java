@@ -20,6 +20,8 @@ import com.efeakif.intibak_control.dto.request.TranscriptRequestDto;
 import com.efeakif.intibak_control.dto.response.ExemptionResponseDto;
 import com.efeakif.intibak_control.service.ExemptionService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.RequiredArgsConstructor;
 
@@ -28,23 +30,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/exemption")
 public class ExemptionController {
     private final ExemptionService exemptionService;
-
-    // @PostMapping(value = "analysis", consumes =
-    // MediaType.MULTIPART_FORM_DATA_VALUE)
-    // public ResponseEntity<List<ExemptionResponseDto>>
-    // analyzeExemeption(@RequestParam MultipartFile transcript,
-    // @RequestParam MultipartFile courseContent) throws IOException {
-
-    // if (transcript.isEmpty() || courseContent.isEmpty())
-    // throw new IllegalArgumentException("transcript or course content pdfs cannot
-    // be empty");
-
-    // List<ExemptionResponseDto> exemptionResponseDtos =
-    // exemptionService.analyzeExemption(transcript,
-    // courseContent);
-    // return ResponseEntity.ok(exemptionResponseDtos);
-
-    // }
 
     @PostMapping(value = "/transcript", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TranscriptDto> analyzeTranscription(@RequestParam MultipartFile transcript)
@@ -74,11 +59,8 @@ public class ExemptionController {
 
     @PostMapping("/exemption")
     public ResponseEntity<List<ExemptionResponseDto>> exemptCourse(
-            @RequestBody ExemptionAnalysisRequestDto exemptionAnalysisRequestDto)
+            @RequestBody @Valid ExemptionAnalysisRequestDto exemptionAnalysisRequestDto)
             throws IOException {
-
-        CourseContentDto courseContentDto = exemptionAnalysisRequestDto.getCourseContentDto();
-        TranscriptRequestDto transcriptRequestDto = exemptionAnalysisRequestDto.getTranscriptRequestDto();
 
         // String transcriptCourseCode = transcriptRequestDto.getCourseCode()
         // .toLowerCase(Locale.forLanguageTag("tr")).trim();
@@ -96,8 +78,7 @@ public class ExemptionController {
         // !transcriptCourseName.equals(contentCourseName))
         // throw new IOException("course codes and names have to match");
 
-        List<ExemptionResponseDto> exemptionResponseDto = exemptionService.exemptCourse(transcriptRequestDto,
-                courseContentDto);
+        List<ExemptionResponseDto> exemptionResponseDto = exemptionService.exemptCourse(exemptionAnalysisRequestDto);
 
         return ResponseEntity.ok(exemptionResponseDto);
 

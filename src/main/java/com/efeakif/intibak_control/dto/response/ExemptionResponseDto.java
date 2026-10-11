@@ -31,6 +31,8 @@ public class ExemptionResponseDto {
 
     private String llmReport;
 
+    private String sourceSemester;
+
     private String missingTopics;
 
     private Double llmSimilarityPercent;

@@ -75,6 +75,8 @@ public class ExemptionReport {
   @Column(nullable = false)
   private Double vectorSimilarityPercent;
 
+  private String sourceSemester;
+
   @Column(nullable = false)
   private Double llmSimilarityPercent;
 

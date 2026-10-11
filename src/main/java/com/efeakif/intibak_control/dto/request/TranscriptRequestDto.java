@@ -23,6 +23,8 @@ public class TranscriptRequestDto {
 
     private CourseLanguage courseLanguage;
 
+    private String sourceSemester;
+
     private Double ects;
 
     private Grade grade;

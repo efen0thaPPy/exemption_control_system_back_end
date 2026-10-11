@@ -39,6 +39,7 @@ public class ExemptionMapper {
 
         double vectorPercent = Math.round(doc.getScore() * 100);
         exemptionReport.setVectorSimilarityPercent(vectorPercent);
+        exemptionReport.setSourceSemester(transcriptRequestDto.getSourceSemester());
         exemptionReport.setSourceAkts(transcriptRequestDto.getEcts());
         exemptionReport.setMissingTopics(exemptionDto.getMissingTopics());
         exemptionReport.setSourceCourseName(transcriptRequestDto.getCourseName());
@@ -69,6 +70,7 @@ public class ExemptionMapper {
         exemptionResponseDto.setMissingTopics(exemptionReport.getMissingTopics());
         exemptionResponseDto.setSourceCourseName(exemptionReport.getSourceCourseName());
         exemptionResponseDto.setUniversity(exemptionReport.getUniversity());
+        exemptionResponseDto.setSourceSemester(exemptionReport.getSourceSemester());
         exemptionResponseDto.setSourceGrade(exemptionReport.getSourceGrade());
         exemptionResponseDto.setExemptionStatus(exemptionReport.getExemptionStatus());
         exemptionResponseDto.setTargetCourseName(exemptionReport.getTargetCourseName());

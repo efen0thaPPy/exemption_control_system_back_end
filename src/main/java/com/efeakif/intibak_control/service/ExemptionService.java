@@ -15,6 +15,8 @@ import com.efeakif.intibak_control.dto.llm.CourseContentDto;
 
 import com.efeakif.intibak_control.dto.llm.ExemptionDto;
 import com.efeakif.intibak_control.dto.llm.TranscriptDto;
+import com.efeakif.intibak_control.dto.llm.TranscriptDto.TranscriptCourses;
+import com.efeakif.intibak_control.dto.request.ExemptionAnalysisRequestDto;
 import com.efeakif.intibak_control.dto.request.TranscriptRequestDto;
 import com.efeakif.intibak_control.dto.response.ExemptionResponseDto;
 import com.efeakif.intibak_control.entity.ExemptionReport;
@@ -23,6 +25,7 @@ import com.efeakif.intibak_control.mapping.ExemptionMapper;
 import com.efeakif.intibak_control.repository.ExemptionRepo;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -33,44 +36,60 @@ public class ExemptionService {
    private final PdfExtractionService pdfExtractionService;
    private final VectorStoreService vectorStoreService;
    private final ExemptionMapper mapper;
-   private final ExemptionRepo exemptionRepo;
+   private final TranscriptParserService transcriptParserService;
 
    private static final String TRANSCRIPT_PROMPT = """
-                                                                        You are a precision academic transcript extractor for Turkish university transcripts (YÖK / e-Devlet format).
-         Extract the student info and all completed/graded courses into valid JSON strictly matching the schema.
+                                 You are a precision extractor for Turkish YÖK / e-Devlet transcripts ("NOT DÖKÜM BELGESİ").
+         The input is raw text extracted from the PDF. Extract the student info and every graded course block into JSON.
 
-         ### HARD CONSTRAINTS:
-         1. NO PARENTHESES IN courseCode:
-            - Any text in parentheses like "(COMPUTER PROGRAMMING I)", "(CALCULUS I)", "(DISCRETE MATHEMATICS)" is a TRANSLATION SUBTITLE.
-            - COMPLETELY DISCARD IT! NEVER put parentheses "(" or ")" inside courseCode!
+         ### HOW THE TEXT IS STRUCTURED
+         1. SEMESTER HEADINGS: a line like "2023-2024 Güz Dönemi", "2023-2024 Bahar Dönemi" or "2023-2024 Yaz Okulu".
+            Every course block after a heading belongs to that semester until the next heading.
+         2. COURSE BLOCK: each course is a block of consecutive lines:
+              103051_BZ                  <- code prefix (may start with "*")
+              111                        <- course number
+              BİLGİSAYAR PROGRAMLAMA I   <- course name (may continue on a 2nd line)
+              (COMPUTER PROGRAMMING I)   <- English translation in parentheses: IGNORE
+              Z Tr 4 0 5 5 DC 72 KL      <- row line
+            The row line tokens are, in order:
+              Status | Language | T | U | UK | AKTS | Grade | Points | Comment
+              Z      | Tr       | 4 | 0 | 5  | 5    | DC    | 72     | KL
+         3. NOISE: ignore lines containing DNO, GNO, TUK, TAKTS, DSD, Şeref, Başarılı, page numbers like "1 / 4", the barcode/verification footer, column headers (Dersin Statüsü, Öğretim Dili, AKTS, Not, Puan, Açıklama), and the student-info header that repeats on every page. Noise lines never start a course and never change the semester.
+         4. PAGE BREAK: a block can be split by a page break, e.g.
+              103051_BZ DIGITAL SYSTEMS LABORATORY Z İng. 0 2 2 2 BB 216 G
+              ...page header lines...
+              311 (DIGITAL SYSTEMS LABORATORY)
+            -> courseCode "103051_BZ 311", courseName "DIGITAL SYSTEMS LABORATORY".
 
-         2. HOW courseCode IS FORMED:
-            - Always combine the code prefix and the course number (Prefix + Space + Number):
-              * "103051_BZ" and "111" -> "103051_BZ 111" (NOT "111 (COMPUTER PROGRAMMING I)")
-              * "103051_BZ" and "101" -> "103051_BZ 101" (NOT "101 (CALCULUS I)")
-              * "103051_BZ" and "108" -> "103051_BZ 108" (NOT "108 (CALCULUS II)")
-              * "103051_BZ" and "106" -> "103051_BZ 106" (NOT "106 (DISCRETE MATHEMATICS)")
-              * "103051_BZ" and "102" -> "103051_BZ 102"
-              * "103051_BZ" and "203" -> "103051_BZ 203"
-              * "103051_BZ" and "205" -> "103051_BZ 205"
-              * "103051_10305" and "10065" -> "103051_10305 10065"
-              * "103051_10305" and "10055" -> "103051_10305 10055"
-              * "103051_10305" and "10064" -> "103051_10305 10064"
-            - Remove any leading "*" asterisk.
+         ### FIELD RULES (every value of an item comes from ONE block only - never mix values from neighbouring blocks)
+         - courseCode: prefix + " " + course number, leading "*" removed. Example: "*103051_65510" + "1" -> "103051_65510 1".
+         - courseName: the name line(s) before the parenthesized line.
+         - courseLanguage: Language token of the row line: "Tr" -> "TURKISH", "İng." -> "ENGLISH".
+         - ects: the AKTS token (6th token) of the row line, as a number.
+         - grade: the Grade token (7th token) of the row line.
+         - semester: the closest semester heading ABOVE the block.
 
-         3. courseName:
-            - The primary official course title (e.g. "BİLGİSAYAR PROGRAMLAMA I", "MATEMATİK I", "PHYSICS I").
-            - NEVER empty.
+         ### WHICH BLOCKS TO OUTPUT
+         - Output one item per block whose grade is a letter grade (AA, BA, BB, CB, CC, DC, DD, FD, FF, S, M, ET), in the order the blocks appear.
+         - Skip blocks whose grade is "-". If every block of a semester has "-", output nothing from it and close the array.
+         - Retakes: a course that appears again in a later semester (Comment contains "TKR") is a NEW block. Output it as its own item with its own semester and grade, even though its courseCode already appeared earlier. Never output the same block twice.
 
-         4. ects (AKTS):
-            - ALWAYS the 4th credit number before the grade. MUST BE A VALID NUMBER (e.g. 6.0, 5.0, 2.0). NEVER a string or "-".
+         ### EXAMPLE
+         Input block (under heading "2023-2024 Güz Dönemi"):
+           103051_10305
+           10063
+           PHYSICS I
+           (PHYSICS I)
+           Z İng. 3 1 6 6 BB 195 EŞD G
+         Output item:
+           {"courseCode": "103051_10305 10063", "courseName": "PHYSICS I", "semester": "2023-2024 Güz Dönemi", "courseLanguage": "ENGLISH", "ects": 6, "grade": "BB"}
 
-         5. grade & MANDATORY TERMINATION:
-            - ONLY extract courses that have an actual letter grade: AA, BA, BB, CB, CC, DC, DD, FD, FF, S, M, ET.
-            - If a course has grade "-" (like ongoing/future term courses): DO NOT EXTRACT IT! SKIP COMPLETELY!
-            - NEVER output grade: "-" or ects: "-".
+         ### STUDENT INFO
+         - The labels "Öğrenci No", "T.C. Kimlik No", "Adı", "Doğum Tarihi" are followed by their values in the same order. firstName = the value for "Adı".
+         - lastName = the text after "Soyadı (Surname) :".
+         - university = the line ending in "ÜNİVERSİTESİ".
 
-         ### OUTPUT FORMAT:
+         ### OUTPUT FORMAT
          Return strictly a valid JSON object matching this schema:
          {
            "firstName": "string",
@@ -80,6 +99,7 @@ public class ExemptionService {
              {
                "courseCode": "string",
                "courseName": "string",
+               "semester": "string",
                "courseLanguage": "TURKISH" | "ENGLISH",
                "ects": number,
                "grade": "string"
@@ -89,9 +109,7 @@ public class ExemptionService {
 
 
 
-
-
-                                                                                                            """;
+                                    """;
 
    private static final String COURSE_CONTENT_MAPPER = """
                  You are an academic course syllabus parser. Your task is to extract the course code, course name, and pure academic subject topics from the provided syllabus document.
@@ -150,22 +168,29 @@ public class ExemptionService {
 
       String transcriptText = pdfExtractionService.extractRawTextFromPdf(transcript);
 
-      TranscriptDto transcriptDto = llmService.converse(AiModel.llama31, TRANSCRIPT_PROMPT, transcriptText,
-            TranscriptDto.class);
+      TranscriptDto transcriptDto = transcriptParserService.parseTranscript(transcriptText);
 
-      HashMap<String, TranscriptDto.TranscriptCourses> courses = new LinkedHashMap<>();
+      if (transcriptDto == null || transcriptDto.getTranscriptCourses().isEmpty()) {
+         System.out.println("parse failed, fallbacking to llm");
+
+         transcriptDto = llmService.converse(AiModel.gemini36, TRANSCRIPT_PROMPT, transcriptText,
+               TranscriptDto.class);
+      }
+
+      HashMap<String, TranscriptDto.TranscriptCourses> uniqueCourses = new LinkedHashMap<>();
 
       if (transcriptDto != null && transcriptDto.getTranscriptCourses() != null) {
 
-         for (TranscriptDto.TranscriptCourses transcriptCourses : transcriptDto.getTranscriptCourses()) {
-            if (transcriptCourses.getCourseCode() != null && !transcriptCourses.getCourseCode().isBlank()) {
+         for (TranscriptDto.TranscriptCourses courses : transcriptDto.getTranscriptCourses()) {
+            if (courses.getCourseCode() != null && !courses.getCourseCode().isBlank()
+                  && courses.getGrade() != null) {
 
-               courses.put(transcriptCourses.getCourseCode(), transcriptCourses);
+               uniqueCourses.put(courses.getCourseCode(), courses);
             }
 
          }
 
-         transcriptDto.setTranscriptCourses(new ArrayList<>(courses.values()));
+         transcriptDto.setTranscriptCourses(new ArrayList<>(uniqueCourses.values()));
       }
       return transcriptDto;
 
@@ -175,7 +200,7 @@ public class ExemptionService {
    public CourseContentDto analyzeCourseContents(MultipartFile contents) throws IOException {
 
       String contentText = pdfExtractionService.extractRawTextFromPdf(contents);
-      CourseContentDto courseContentDto = llmService.converse(AiModel.llama31, COURSE_CONTENT_MAPPER, contentText,
+      CourseContentDto courseContentDto = llmService.converse(AiModel.gemini36, COURSE_CONTENT_MAPPER, contentText,
             CourseContentDto.class);
 
       return courseContentDto;
@@ -183,22 +208,21 @@ public class ExemptionService {
    }
 
    @Transactional
-   public List<ExemptionResponseDto> exemptCourse(TranscriptRequestDto transcriptRequestDto,
-         CourseContentDto courseContentDto) throws IOException {
+   public List<ExemptionResponseDto> exemptCourse(ExemptionAnalysisRequestDto exemptionAnalysisRequestDto)
+         throws IOException {
+
+      CourseContentDto courseContentDto = exemptionAnalysisRequestDto.getCourseContentDto();
+      TranscriptRequestDto transcriptRequestDto = exemptionAnalysisRequestDto.getTranscriptRequestDto();
 
       List<Document> documents = vectorStoreService.findSimilarCourses(courseContentDto.getCourseName(),
-            courseContentDto.getCourseContents());
+            courseContentDto.getCourseContents(), exemptionAnalysisRequestDto.getAcademicYear());
 
       List<ExemptionResponseDto> exemptionResponseDtos = new ArrayList<>();
 
       for (Document doc : documents) {
-         if (doc == null)
+         if (doc == null) {
             continue;
-
-         
-
-         System.out.println(
-               String.format("CourseName: %s, Score: %s", doc.getMetadata().get("courseName"), doc.getScore()));
+         }
 
          String sourceText = String.format(
                "Source course name: %s,\n Source Syllabi: \n%s\n---------------\n",
