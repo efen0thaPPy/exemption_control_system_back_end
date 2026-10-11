@@ -20,6 +20,7 @@ public enum Grade {
             case "S", "P", "BAŞARILI", "BASARILI" -> S;
             case "M", "EX", "MUAF" -> M;
             case "ET" -> ET;
+            case "-" -> null;
             default -> FF;
         };
     }

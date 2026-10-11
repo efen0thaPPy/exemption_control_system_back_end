@@ -52,7 +52,7 @@ public class Course {
 
     private double localCredit;
 
-    private double akts;
+    private double ects;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WeeklyContent> weeklyContents = new ArrayList<>();
