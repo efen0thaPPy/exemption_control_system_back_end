@@ -48,6 +48,13 @@ public class ErciyesScrapingSeedingService {
                 if (firstColumn.contains("Ders"))
                     continue;
 
+                Element a = tds.get(1).select("a").first();
+
+                if (a == null)
+                    continue;
+
+                String url = a.absUrl("href");
+
                 String courseCode = tds.get(0).text();
 
                 List<Course> courses = courseRepo.findByAcademicYearAndCourseCode(academicYear, courseCode);
@@ -68,13 +75,9 @@ public class ErciyesScrapingSeedingService {
                 course.setPracticeHours(Integer.parseInt(hourTypes[1]));
 
                 course.setLocalCredit(Double.parseDouble(tds.get(4).text()));
-                course.setAkts(Double.parseDouble(tds.get(5).text()));
+                course.setEcts(Double.parseDouble(tds.get(5).text()));
 
                 course.setAcademicYear(academicYear);
-
-                Element a = tds.get(1).select("a").first();
-
-                String url = a.absUrl("href");
 
                 scrapeAndSeedWeeklyContents(url, course);
 

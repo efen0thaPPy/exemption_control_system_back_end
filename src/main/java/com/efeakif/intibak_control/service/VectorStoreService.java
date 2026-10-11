@@ -9,7 +9,7 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
-import com.efeakif.intibak_control.dto.llm.CourseListDto;
+import com.efeakif.intibak_control.dto.llm.CourseContentDto;
 import com.efeakif.intibak_control.entity.Course;
 import com.efeakif.intibak_control.entity.WeeklyContent;
 import com.efeakif.intibak_control.enums.CourseLanguage;
@@ -32,7 +32,7 @@ public class VectorStoreService {
                     "courseId", course.getId(),
                     "courseName", course.getCourseName(),
                     "academicYear", course.getAcademicYear(),
-                    "akts", course.getAkts());
+                    "akts", course.getEcts());
 
             documents.add(new Document(textToEmbed, metadata));
         }
@@ -40,13 +40,14 @@ public class VectorStoreService {
 
     }
 
-    public List<Document> findSimilarCourses(CourseListDto.CourseContentDto contentDto) {
+    public List<Document> findSimilarCourses(String name, String descriptions) {
 
         SearchRequest searchRequest = SearchRequest.builder()
-                .query(String.format("CourseName: %s, Descriptions: %s", contentDto.getCourseName(),
-                        contentDto.getDescription()))
-                .topK(3)
-                .similarityThreshold(0.60).build();
+                .query(String.format("CourseName: %s, Descriptions: %s",
+                        name,
+                        descriptions))
+                .topK(5)
+                .similarityThreshold(0.70).build();
 
         return vectorStore.similaritySearch(searchRequest);
 
