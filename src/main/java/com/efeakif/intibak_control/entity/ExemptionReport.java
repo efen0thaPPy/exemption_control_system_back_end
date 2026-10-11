@@ -3,6 +3,7 @@ package com.efeakif.intibak_control.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.efeakif.intibak_control.enums.CourseLanguage;
 import com.efeakif.intibak_control.enums.ExemptionStatus;
 import com.efeakif.intibak_control.enums.Grade;
 
@@ -45,6 +46,14 @@ public class ExemptionReport {
   private String targetCourseName;
 
   @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private CourseLanguage sourceLanguage;
+
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private CourseLanguage targetLanguage;
+
+  @Column(nullable = false)
   private String academicYear;
 
   @Column(nullable = false)
@@ -64,7 +73,10 @@ public class ExemptionReport {
   private String missingTopics;
 
   @Column(nullable = false)
-  private Double similarityPercent;
+  private Double vectorSimilarityPercent;
+
+  @Column(nullable = false)
+  private Double llmSimilarityPercent;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
