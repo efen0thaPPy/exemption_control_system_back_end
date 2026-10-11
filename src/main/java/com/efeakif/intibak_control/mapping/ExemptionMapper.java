@@ -4,8 +4,9 @@ import org.springframework.ai.document.Document;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.stereotype.Component;
 
-import com.efeakif.intibak_control.dto.llm.CourseListDto;
+import com.efeakif.intibak_control.dto.llm.CourseContentDto;
 import com.efeakif.intibak_control.dto.llm.ExemptionDto;
+import com.efeakif.intibak_control.dto.request.TranscriptRequestDto;
 import com.efeakif.intibak_control.dto.response.ExemptionResponseDto;
 import com.efeakif.intibak_control.entity.ExemptionReport;
 import com.efeakif.intibak_control.enums.ExemptionStatus;
@@ -14,34 +15,40 @@ import com.efeakif.intibak_control.enums.Grade;
 @Component
 public class ExemptionMapper {
 
-    public ExemptionReport toEntity(ExemptionDto exemptionDto, CourseListDto.CourseContentDto sourceCourse,
-            Document doc, CourseListDto studentInfo) {
+    public ExemptionReport toEntity(ExemptionDto exemptionDto, TranscriptRequestDto transcriptRequestDto,
+            Document doc
+
+    ) {
 
         ExemptionReport exemptionReport = new ExemptionReport();
-        exemptionReport.setFirstName(studentInfo.getFirstName());
+        exemptionReport.setFirstName(transcriptRequestDto.getFirstName());
 
         if (exemptionDto.getSimilarityPercent() < 60)
             exemptionReport.setExemptionStatus(ExemptionStatus.FAILED);
 
-        else if (exemptionDto.getSimilarityPercent() >= 60 && exemptionDto.getSimilarityPercent() < 80)
+        else if (exemptionDto.getSimilarityPercent() >= 60 &&
+                exemptionDto.getSimilarityPercent() < 80)
             exemptionReport.setExemptionStatus(ExemptionStatus.MANUAL_CHECK_REQUIRED);
 
         else
             exemptionReport.setExemptionStatus(ExemptionStatus.PASSED);
 
-        exemptionReport.setLastName(studentInfo.getLastName());
+        exemptionReport.setLastName(transcriptRequestDto.getLastName());
         exemptionReport.setLlmReport(exemptionDto.getReport());
-        exemptionReport.setSimilarityPercent(exemptionDto.getSimilarityPercent());
-        exemptionReport.setSourceAkts(sourceCourse.getAkts());
+        exemptionReport.setLlmSimilarityPercent(exemptionDto.getSimilarityPercent());
+
+        double vectorPercent = Math.round(doc.getScore() * 100);
+        exemptionReport.setVectorSimilarityPercent(vectorPercent);
+        exemptionReport.setSourceAkts(transcriptRequestDto.getEcts());
         exemptionReport.setMissingTopics(exemptionDto.getMissingTopics());
-        exemptionReport.setSourceCourseName(sourceCourse.getCourseName());
-        exemptionReport.setUniversity(studentInfo.getUniversity());
+        exemptionReport.setSourceCourseName(transcriptRequestDto.getCourseName());
+        exemptionReport.setUniversity(transcriptRequestDto.getUniversity());
         exemptionReport.setTargetCourseName((String) doc.getMetadata().get("courseName"));
         Number number = (Number) doc.getMetadata().get("akts");
         if (number != null)
             exemptionReport.setTargetAkts(number.doubleValue());
         exemptionReport.setAcademicYear((String) doc.getMetadata().get("academicYear"));
-        exemptionReport.setSourceGrade(sourceCourse.getGrade());
+        exemptionReport.setSourceGrade(transcriptRequestDto.getGrade());
 
         return exemptionReport;
 
@@ -53,7 +60,11 @@ public class ExemptionMapper {
         exemptionResponseDto.setFirstName(exemptionReport.getFirstName());
         exemptionResponseDto.setLastName(exemptionReport.getLastName());
         exemptionResponseDto.setLlmReport(exemptionReport.getLlmReport());
-        exemptionResponseDto.setSimilarityPercent(exemptionReport.getSimilarityPercent());
+
+        exemptionResponseDto.setLlmSimilarityPercent(exemptionReport.getLlmSimilarityPercent());
+
+        exemptionResponseDto.setVectorSimilarityPercent(exemptionReport.getVectorSimilarityPercent());
+
         exemptionResponseDto.setSourceAkts(exemptionReport.getSourceAkts());
         exemptionResponseDto.setMissingTopics(exemptionReport.getMissingTopics());
         exemptionResponseDto.setSourceCourseName(exemptionReport.getSourceCourseName());
