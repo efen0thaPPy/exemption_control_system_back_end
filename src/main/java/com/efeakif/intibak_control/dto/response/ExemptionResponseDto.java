@@ -2,6 +2,7 @@ package com.efeakif.intibak_control.dto.response;
 
 import com.efeakif.intibak_control.enums.ExemptionStatus;
 import com.efeakif.intibak_control.enums.Grade;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,7 +33,9 @@ public class ExemptionResponseDto {
 
     private String missingTopics;
 
-    private Double similarityPercent;
+    private Double llmSimilarityPercent;
+
+    private Double vectorSimilarityPercent;
 
     @Enumerated(EnumType.STRING)
 
