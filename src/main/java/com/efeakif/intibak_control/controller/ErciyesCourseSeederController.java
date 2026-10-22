@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.efeakif.intibak_control.service.seeding.CourseSeederService;
+import com.efeakif.intibak_control.service.seeding.ErciyesCourseSeederService;
 import com.efeakif.intibak_control.service.seeding.ErciyesScrapingSeedingService;
 
 import lombok.RequiredArgsConstructor;
@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/courses")
-public class CourseSeederController {
+public class ErciyesCourseSeederController {
 
-    private final CourseSeederService courseSeederService;
+    private final ErciyesCourseSeederService courseSeederService;
 
     @Value("${erciyesUrl}")
     private String url;

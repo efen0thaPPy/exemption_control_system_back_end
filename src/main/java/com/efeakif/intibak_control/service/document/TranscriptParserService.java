@@ -1,4 +1,4 @@
-package com.efeakif.intibak_control.service;
+package com.efeakif.intibak_control.service.document;
 
 import com.efeakif.intibak_control.dto.llm.TranscriptDto;
 import com.efeakif.intibak_control.dto.llm.TranscriptDto.TranscriptCourses;

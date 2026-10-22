@@ -1,6 +1,7 @@
 package com.efeakif.intibak_control.service.seeding;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -8,12 +9,13 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.stringtemplate.v4.ST;
 import org.jsoup.nodes.Element;
 
-import com.efeakif.intibak_control.entity.Course;
+import com.efeakif.intibak_control.entity.ErciyesCourse;
 import com.efeakif.intibak_control.entity.WeeklyContent;
 import com.efeakif.intibak_control.enums.CourseType;
-import com.efeakif.intibak_control.repository.CourseRepo;
+import com.efeakif.intibak_control.repository.ErciyesCourseRepo;
 
 import jakarta.transaction.Transactional;
 
@@ -23,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ErciyesScrapingSeedingService {
 
-    private final CourseRepo courseRepo;
+    private final ErciyesCourseRepo courseRepo;
 
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
 
@@ -35,55 +37,84 @@ public class ErciyesScrapingSeedingService {
 
         try {
 
-            Document doc = Jsoup.connect(connectionUrl).timeout(15000).userAgent(USER_AGENT).get();
+            int count = 0;
 
-            Elements trs = doc.select("table.my-table88 tr");
+            List<String> semesterNames = new ArrayList<>();
 
-            for (Element tr : trs) {
+            Document doc = Jsoup.connect(connectionUrl).timeout(30000).userAgent(USER_AGENT).get();
 
-                Elements tds = tr.select("td");
+            Elements tables = doc.select("table.my-table88");
 
-                String firstColumn = tds.get(0).text().trim();
+            Elements semesters = doc.select(".container-fluid");
 
-                if (firstColumn.contains("Ders"))
-                    continue;
+            for (Element sm : semesters) {
 
-                Element a = tds.get(1).select("a").first();
+                String[] parts = sm.text().split(" ");
 
-                if (a == null)
-                    continue;
+                semesterNames.add(parts[0].replace(".", "").trim());
 
-                String url = a.absUrl("href");
+            }
 
-                String courseCode = tds.get(0).text();
+            for (Element table : tables) {
 
-                List<Course> courses = courseRepo.findByAcademicYearAndCourseCode(academicYear, courseCode);
+                Elements trs = table.select("tbody tr");
 
-                if (!courses.isEmpty())
-                    continue;
+                for (Element tr : trs) {
 
-                Course course = new Course();
+                    Elements tds = tr.select("td");
 
-                course.setCourseCode(tds.get(0).text());
+                    String firstColumn = tds.get(0).text().trim();
 
-                course.setCourseName(tds.get(1).text());
-                course.setCourseType(CourseType.fromString(tds.get(2).text()));
+                    if (firstColumn.contains("Ders"))
+                        continue;
 
-                String hours = tds.get(3).text().trim();
-                String[] hourTypes = hours.split("\\+");
-                course.setTheoryHours(Integer.parseInt(hourTypes[0]));
-                course.setPracticeHours(Integer.parseInt(hourTypes[1]));
+                    String courseCode = tds.get(0).text();
 
-                course.setLocalCredit(Double.parseDouble(tds.get(4).text()));
-                course.setEcts(Double.parseDouble(tds.get(5).text()));
+                    ErciyesCourse checkedCourse = courseRepo.findByAcademicYearAndCourseCode(academicYear, courseCode);
 
-                course.setAcademicYear(academicYear);
+                    if (checkedCourse != null)
+                        continue;
 
-                scrapeAndSeedWeeklyContents(url, course);
+                    ErciyesCourse course = new ErciyesCourse();
 
-                courseRepo.save(course);
+                    System.out.println(courseCode);
 
-                Thread.sleep(300);
+                    course.setCourseCode(tds.get(0).text());
+
+                    course.setCourseName(tds.get(1).text());
+                    course.setCourseType(CourseType.fromWeb(tds.get(0).text()));
+
+                    String hours = tds.get(3).text().trim();
+                    String[] hourTypes = hours.split("\\+");
+                    course.setTheoryHours(Integer.parseInt(hourTypes[0]));
+                    course.setPracticeHours(Integer.parseInt(hourTypes[1]));
+
+                    course.setLocalCredit(Double.parseDouble(tds.get(4).text()));
+                    course.setEcts(Double.parseDouble(tds.get(5).text()));
+
+                    course.setAcademicYear(academicYear);
+
+                    course.setSemester(
+                            Integer.parseInt(semesterNames.get(count)));
+
+                    Element a = tds.get(1).select("a").first();
+
+                    if (a == null || course.getCourseType() == CourseType.COMMON_MANDATORY) {
+                        courseRepo.save(course);
+                        continue;
+                    }
+
+                    String url = a.absUrl("href");
+
+                    scrapeAndSeedWeeklyContents(url, course);
+
+                    courseRepo.save(course);
+
+                    Thread.sleep(300);
+
+                }
+
+                count++;
 
             }
 
@@ -98,7 +129,7 @@ public class ErciyesScrapingSeedingService {
 
     }
 
-    public void scrapeAndSeedWeeklyContents(String url, Course course) {
+    public void scrapeAndSeedWeeklyContents(String url, ErciyesCourse course) {
         try {
 
             Document doc = Jsoup.connect(url).timeout(15000).userAgent(USER_AGENT).get();

@@ -26,7 +26,7 @@ public class WeeklyContent {
 
     @ManyToOne
     @JoinColumn(name = "course_id")
-    private Course course;
+    private ErciyesCourse course;
 
     @Column(nullable = false)
     private int weekNumber;

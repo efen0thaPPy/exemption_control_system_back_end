@@ -1,6 +1,5 @@
 package com.efeakif.intibak_control.dto.response;
 
-import com.efeakif.intibak_control.enums.ExemptionStatus;
 import com.efeakif.intibak_control.enums.Grade;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -38,9 +37,5 @@ public class ExemptionResponseDto {
     private Double llmSimilarityPercent;
 
     private Double vectorSimilarityPercent;
-
-    @Enumerated(EnumType.STRING)
-
-    private ExemptionStatus exemptionStatus;
 
 }

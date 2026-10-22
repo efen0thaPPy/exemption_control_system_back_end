@@ -35,4 +35,15 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(ResourceNotFoundException exception,
+            HttpServletRequest httpServletRequest) {
+        ErrorResponse errorResponse = ErrorResponse.builder().timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value()).message(exception.getMessage())
+                .path(httpServletRequest.getRequestURI()).build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
+
+    }
+
 }

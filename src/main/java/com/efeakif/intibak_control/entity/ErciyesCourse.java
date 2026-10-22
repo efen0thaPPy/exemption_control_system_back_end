@@ -27,14 +27,14 @@ import lombok.Setter;
 @Table(name = "courses", uniqueConstraints = {
         @UniqueConstraint(name = "uk_course_year", columnNames = { "course_code", "academic_year" }) })
 
-public class Course {
+public class ErciyesCourse {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "course_id")
     private int id;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 10, unique = true)
     private String courseCode;
 
     @Column(nullable = false, length = 100)
@@ -46,6 +46,8 @@ public class Course {
     private String academicYear;
 
     private int theoryHours;
+
+    private int semester;
 
     @Enumerated(EnumType.STRING)
     private CourseType courseType;

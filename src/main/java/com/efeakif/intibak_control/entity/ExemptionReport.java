@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.efeakif.intibak_control.enums.CourseLanguage;
-import com.efeakif.intibak_control.enums.ExemptionStatus;
+
 import com.efeakif.intibak_control.enums.Grade;
 
 import jakarta.persistence.CascadeType;
@@ -45,11 +45,9 @@ public class ExemptionReport {
   @Column(nullable = false)
   private String targetCourseName;
 
-  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private CourseLanguage sourceLanguage;
 
-  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private CourseLanguage targetLanguage;
 
@@ -79,9 +77,5 @@ public class ExemptionReport {
 
   @Column(nullable = false)
   private Double llmSimilarityPercent;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private ExemptionStatus exemptionStatus;
 
 }
