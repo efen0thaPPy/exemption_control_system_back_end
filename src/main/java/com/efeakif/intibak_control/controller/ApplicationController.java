@@ -40,6 +40,9 @@ import com.efeakif.intibak_control.enums.ExemptionStatus;
 import com.efeakif.intibak_control.mapping.ApplicationMapper;
 import com.efeakif.intibak_control.service.ApplicationService;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -168,10 +171,13 @@ public class ApplicationController {
 
     }
 
+    @RequestBody(content = @Content(encoding = @Encoding(name = "selectedCourseRequestDto", contentType = MediaType.APPLICATION_JSON_VALUE)))
     @PostMapping(value = "/{trackingCode}/courses", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SelectedCourseResponse> addCourse(
-            @RequestPart SelectedCourseRequestDto selectedCourseRequestDto, @RequestParam MultipartFile multipartFile,
-            @RequestParam String trackingCode) {
+
+            @RequestPart SelectedCourseRequestDto selectedCourseRequestDto,
+            @RequestParam MultipartFile multipartFile,
+            @PathVariable String trackingCode) {
 
         SelectedCourseResponse selectedCourseResponse = applicationService.addCourse(trackingCode,
                 selectedCourseRequestDto, multipartFile);

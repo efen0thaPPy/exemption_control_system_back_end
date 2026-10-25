@@ -45,6 +45,7 @@ public class SelectedCourseRequestDto {
     private String targetCourseCode;
 
     @Enumerated(EnumType.STRING)
-    private ExemptionStatus exemptionStatus;
+    @JsonIgnore
+    private ExemptionStatus exemptionStatus = ExemptionStatus.PENDING;
 
 }

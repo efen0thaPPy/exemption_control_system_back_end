@@ -291,7 +291,7 @@ public class ApplicationService {
    }
 
    @Transactional
-   public SelectedCourseResponse  addCourse(String trackingCode,
+   public SelectedCourseResponse addCourse(String trackingCode,
          SelectedCourseRequestDto selectedCourseRequestDto,
          MultipartFile coursePdfFile) {
 
