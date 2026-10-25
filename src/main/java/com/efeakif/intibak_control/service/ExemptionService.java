@@ -12,10 +12,12 @@ import com.efeakif.intibak_control.dto.llm.CourseContentDto;
 
 import com.efeakif.intibak_control.dto.llm.ExemptionDto;
 import com.efeakif.intibak_control.dto.response.ExemptionResponseDto;
-import com.efeakif.intibak_control.entity.ExemptionReport;
+import com.efeakif.intibak_control.entity.Application;
+import com.efeakif.intibak_control.entity.LLMExemptionReport;
 import com.efeakif.intibak_control.entity.SelectedCourse;
 import com.efeakif.intibak_control.entity.Student;
 import com.efeakif.intibak_control.enums.AiModel;
+import com.efeakif.intibak_control.exception.StaleAcademicYearException;
 import com.efeakif.intibak_control.mapping.Mapper;
 import com.efeakif.intibak_control.repository.ExemptionRepo;
 import com.efeakif.intibak_control.service.ai.LLMService;
@@ -66,12 +68,14 @@ public class ExemptionService {
          """;
 
    @Transactional
-   public List<ExemptionResponseDto> exemptCourse(String trackingCode, String courseCode)
+   public List<ExemptionResponseDto> exemptCourse(String trackingCode, long courseId)
          throws IOException {
+
+      Application application = applicationService.findByTrackingCode(trackingCode);
 
       List<ExemptionResponseDto> responseDtos = new ArrayList<>();
 
-      StudentCourseDto studentCourseDto = applicationService.findCourse(trackingCode, courseCode);
+      StudentCourseDto studentCourseDto = applicationService.getStudentCourse(trackingCode, courseId);
 
       Student student = studentCourseDto.student();
       SelectedCourse selectedCourse = studentCourseDto.selectedCourse();
@@ -87,10 +91,8 @@ public class ExemptionService {
       String courseName = selectedCourse.getCourseName();
       String courseContent = contentDto.getCourseContents();
 
-      String academicYear = erciyesCourseService.findMaxAcademicYear();
-
       List<Document> documents = vectorStoreService.findSimilarCourses(courseName,
-            courseContent, academicYear);
+            courseContent, application.getAcademicYear());
 
       for (Document doc : documents) {
 
@@ -105,7 +107,7 @@ public class ExemptionService {
          ExemptionDto exemptionDto = llmService.converse(AiModel.llama31, EXEMPTION_PROMPT, sourceText + targetText,
                ExemptionDto.class);
 
-         ExemptionReport exemptionReport = mapper.toEntity(exemptionDto, student, selectedCourse, doc);
+         LLMExemptionReport exemptionReport = mapper.toEntity(exemptionDto, student, selectedCourse, doc, application);
 
          exemptionRepo.save(exemptionReport);
 

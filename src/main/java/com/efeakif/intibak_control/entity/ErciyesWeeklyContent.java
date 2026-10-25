@@ -17,7 +17,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class WeeklyContent {
+public class ErciyesWeeklyContent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

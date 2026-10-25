@@ -15,6 +15,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.Getter;
@@ -24,20 +26,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "exemption_reports")
-public class ExemptionReport {
+public class LLMExemptionReport {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "exemption_report_id")
   private int id;
-
-  @Column(nullable = false)
-  private String firstName;
-
-  @Column(nullable = false)
-  private String lastName;
-
-  @Column(nullable = false)
-  private String university;
 
   @Column(nullable = false)
   private String sourceCourseName;
@@ -45,24 +38,8 @@ public class ExemptionReport {
   @Column(nullable = false)
   private String targetCourseName;
 
-  @Enumerated(EnumType.STRING)
-  private CourseLanguage sourceLanguage;
-
-  @Enumerated(EnumType.STRING)
-  private CourseLanguage targetLanguage;
-
   @Column(nullable = false)
   private String academicYear;
-
-  @Column(nullable = false)
-  private double sourceAkts;
-
-  @Column(nullable = false)
-  private double targetAkts;
-
-  @Column(nullable = false)
-  @Enumerated(EnumType.STRING)
-  private Grade sourceGrade;
 
   @Column(columnDefinition = "TEXT")
   private String llmReport;
@@ -77,5 +54,9 @@ public class ExemptionReport {
 
   @Column(nullable = false)
   private Double llmSimilarityPercent;
+
+  @ManyToOne
+  @JoinColumn(name = "application_id")
+  private Application application;
 
 }

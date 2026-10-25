@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.efeakif.intibak_control.dto.llm.CourseContentDto;
 import com.efeakif.intibak_control.entity.ErciyesCourse;
-import com.efeakif.intibak_control.entity.WeeklyContent;
+
 import com.efeakif.intibak_control.enums.CourseLanguage;
 
 import lombok.RequiredArgsConstructor;

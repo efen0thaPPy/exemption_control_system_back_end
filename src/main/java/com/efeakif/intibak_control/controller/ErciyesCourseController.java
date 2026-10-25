@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +29,21 @@ public class ErciyesCourseController {
     public ResponseEntity<List<ErciyesCourseResponseDto>> getCourses(TransferType transferType) {
         List<ErciyesCourseResponseDto> erciyesCourses = erciyesCourseService.findByMaxAcademicYear(transferType);
         return ResponseEntity.ok(erciyesCourses);
+
+    }
+
+    @GetMapping("/academic-years")
+    public ResponseEntity<String> getMaxAcademicYear() {
+        String maxYear = erciyesCourseService.findMaxAcademicYear();
+        return ResponseEntity.ok(maxYear);
+
+    }
+
+    @GetMapping("/academic-years/{academicYear}")
+    public ResponseEntity<List<ErciyesCourseResponseDto>> findByAcademicYear(@PathVariable String academicYear) {
+        List<ErciyesCourseResponseDto> erciyesCourseResponseDtos = erciyesCourseService
+                .findByAcademicYear(academicYear);
+        return ResponseEntity.ok(erciyesCourseResponseDtos);
 
     }
 

@@ -23,6 +23,7 @@ import com.efeakif.intibak_control.dto.request.SelectedCourseRequestDto;
 import com.efeakif.intibak_control.dto.request.TranscriptRequestDto;
 import com.efeakif.intibak_control.dto.response.ApplicationResponseDto;
 import com.efeakif.intibak_control.dto.response.ApplicationUserResponseDto;
+import com.efeakif.intibak_control.dto.response.SelectedCourseResponse;
 import com.efeakif.intibak_control.dto.response.SimpleApplicationResponseDto;
 import com.efeakif.intibak_control.dto.response.ValidateResponseDto;
 import com.efeakif.intibak_control.entity.Application;
@@ -32,8 +33,11 @@ import com.efeakif.intibak_control.entity.Student;
 import com.efeakif.intibak_control.enums.AiModel;
 import com.efeakif.intibak_control.enums.ApplicationStatus;
 import com.efeakif.intibak_control.enums.CourseType;
+import com.efeakif.intibak_control.enums.ExemptionStatus;
 import com.efeakif.intibak_control.enums.TransferType;
+import com.efeakif.intibak_control.exception.DuplicateStatusException;
 import com.efeakif.intibak_control.exception.ResourceNotFoundException;
+import com.efeakif.intibak_control.exception.UnfilledStatusException;
 import com.efeakif.intibak_control.mapping.ApplicationMapper;
 import com.efeakif.intibak_control.mapping.Mapper;
 import com.efeakif.intibak_control.repository.ApplicationRepo;
@@ -48,6 +52,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ApplicationService {
+   private final ErciyesCourseService erciyesCourseService;
    private final Mapper mapper;
    private final FileStorageService fileStorageService;
    private final ApplicationRepo applicationRepo;
@@ -59,6 +64,10 @@ public class ApplicationService {
 
       ValidateResponseDto validateResponseDto = new ValidateResponseDto();
 
+      if (!erciyesCourseService.findMaxAcademicYear().equals(applicationRequestDto.getAcademicYear())) {
+         validateResponseDto.addError("Courses are updated, refresh your page to fetch the up-to-date ones");
+      }
+
       int year = LocalDate.now().getYear();
 
       TransferType transferType = applicationRequestDto.getTransferType();
@@ -68,6 +77,10 @@ public class ApplicationService {
 
          if (!course.getGrade().isPassing()) {
             validateResponseDto.addError("you cant exempt a course that you failed" + course.getCourseName());
+         }
+         if (course.getCoursePdf() == null || course.getCoursePdf().isEmpty()) {
+            validateResponseDto
+                  .addError(String.format("Course code: %s doesnt have a coursefile", course.getCourseCode()));
          }
 
          String[] splitBySpaces = course.getSemester().split(" ");
@@ -84,21 +97,23 @@ public class ApplicationService {
          if (erciyesCourse == null) {
             validateResponseDto.addError(
                   String.format("Target course couldnt be found with the code %s", course.getTargetCourseCode()));
-         }
-         if (course.getEcts() < erciyesCourse.getEcts()
-               && CourseType.COMMON_MANDATORY != course.getCourseType()) {
-            validateResponseDto.addWarning(
-                  String.format("The ects your course has is lower than of the target course %s",
-                        erciyesCourse.getCourseName()));
-         }
+         } else {
 
-         if (transferType == TransferType.VERTICAL_TRANSFER && erciyesCourse.getSemester() > 4) {
+            if (course.getEcts() < erciyesCourse.getEcts()
+                  && CourseType.COMMON_MANDATORY != course.getCourseType()) {
+               validateResponseDto.addWarning(
+                     String.format("The ects your course has is lower than of the target course %s",
+                           erciyesCourse.getCourseName()));
+            }
 
-            validateResponseDto.addError(
-                  String.format(
-                        "The course you want your course exempted with (%s) is not in the first 4 semester (%s. semester) ",
-                        erciyesCourse.getCourseName(), erciyesCourse.getSemester()));
+            if (transferType == TransferType.VERTICAL_TRANSFER && erciyesCourse.getSemester() > 4) {
 
+               validateResponseDto.addError(
+                     String.format(
+                           "The course you want your course exempted with (%s) is not in the first 4 semester (%s. semester) ",
+                           erciyesCourse.getCourseName(), erciyesCourse.getSemester()));
+
+            }
          }
 
       }
@@ -121,6 +136,7 @@ public class ApplicationService {
       TranscriptRequestDto transcriptRequestDto = applicationRequestDto.getTranscriptRequestDto();
       TransferType transferType = applicationRequestDto.getTransferType();
       List<SelectedCourseRequestDto> courses = applicationRequestDto.getCourses();
+      String academicYear = applicationRequestDto.getAcademicYear();
 
       MultipartFile transcriptFile = transcriptRequestDto.getTranscriptFile();
 
@@ -138,6 +154,7 @@ public class ApplicationService {
       application.setTranscriptPdfPath(transcriptPdfPath);
       application.setTransferType(transferType);
       application.setStudent(student);
+      application.setAcademicYear(academicYear);
 
       List<SelectedCourse> selectedCourses = new ArrayList<>();
 
@@ -147,7 +164,10 @@ public class ApplicationService {
 
          String coursePdfPath = fileStorageService.saveFile(selectedCourseRequestDto.getCoursePdf(), trackingCode,
                suffix);
-         SelectedCourse selectedCourse = mapper.toEntity(selectedCourseRequestDto, coursePdfPath);
+
+         SelectedCourse selectedCourse = applicationMapper.toSelectedCourseEntity(selectedCourseRequestDto,
+               coursePdfPath);
+         selectedCourse.setApplication(application);
          selectedCourses.add(selectedCourse);
 
       }
@@ -173,11 +193,19 @@ public class ApplicationService {
 
       Application application = applicationRepo.findByTrackingCode(trackingCode);
 
-      return applicationMapper.toDto(application);
+      return applicationMapper.toApplicationResponseDto(application);
 
    }
 
-   public Resource findTranscriptUrl(String trackingCode) {
+   public Application getApplicationEntity(String trackingCode) {
+
+      Application application = applicationRepo.findByTrackingCode(trackingCode);
+
+      return application;
+
+   }
+
+   public Resource getTranscript(String trackingCode) {
 
       String path = applicationRepo.findTranscriptPdfPathByTrackingCode(trackingCode);
 
@@ -188,9 +216,9 @@ public class ApplicationService {
 
    }
 
-   public Resource findCourseContentUrl(String courseCode, String trackingCode) {
+   public Resource findCourseContentUrl(long courseId, String trackingCode) {
 
-      String path = applicationRepo.findCourseContentPdfByTrackingCodeAndCourseCode(courseCode, trackingCode);
+      String path = applicationRepo.findCourseContentPdfByTrackingCodeAndCourseId(courseId, trackingCode);
 
       if (path == null || path.isBlank())
          throw new ResourceNotFoundException("url doesnt exist");
@@ -199,10 +227,9 @@ public class ApplicationService {
 
    }
 
-   public StudentCourseDto findCourse(String trackingCode, String courseCode) {
+   public StudentCourseDto getStudentCourse(String trackingCode, long courseId) {
 
-      SelectedCourse selectedCourse = applicationRepo.findSelectedCourseByTrackingCodeAndCourseCode(trackingCode,
-            courseCode);
+      SelectedCourse selectedCourse = getCourseEntity(trackingCode, courseId);
 
       Student student = getStudent(trackingCode);
 
@@ -213,6 +240,115 @@ public class ApplicationService {
    public Student getStudent(String trackingCode) {
       return applicationRepo.findStudentByTrackingCode(trackingCode);
 
+   }
+
+   public SelectedCourse getCourseEntity(String trackingCode, long courseId) {
+      SelectedCourse selectedCourse = applicationRepo.findSelectedCourseByTrackingCodeAndCourseId(trackingCode,
+            courseId);
+
+      return selectedCourse;
+   }
+
+   @Transactional
+   public SelectedCourseResponse manageCourseStatus(String newTargetCourseCode, ExemptionStatus exemptionStatus,
+         String trackingCode,
+         long courseId) {
+
+      SelectedCourse selectedCourse = getCourseEntity(trackingCode, courseId);
+
+      String academicYear = findAcademicYearByTrackingCode(trackingCode);
+
+      if (selectedCourse == null)
+         throw new ResourceNotFoundException(String.format(
+               "there is no course with the id %s in the application with the tracking code of %s", courseId,
+               trackingCode));
+
+      if (newTargetCourseCode != null) {
+         ErciyesCourse erciyesCourse = erciyesRepo.findByAcademicYearAndCourseCode(academicYear, newTargetCourseCode);
+         if (erciyesCourse == null)
+            throw new ResourceNotFoundException("the target course couldn't be found");
+
+         selectedCourse.getCourseExemptionReport().setTargetCourseCode(newTargetCourseCode);
+      }
+
+      if (selectedCourse.getCourseExemptionReport().getExemptionStatus() == exemptionStatus) {
+         throw new DuplicateStatusException("exemption status is already same as in the database");
+
+      }
+
+      selectedCourse.getCourseExemptionReport().setExemptionStatus(exemptionStatus);
+
+      return applicationMapper.toSelectedCourseResponseDto(selectedCourse);
+
+   }
+
+   @Transactional
+   public SelectedCourseResponse manageCourseStatus(ExemptionStatus exemptionStatus, String trackingCode,
+         long courseId) {
+
+      return manageCourseStatus(null, exemptionStatus, trackingCode, courseId);
+
+   }
+
+   @Transactional
+   public SelectedCourseResponse  addCourse(String trackingCode,
+         SelectedCourseRequestDto selectedCourseRequestDto,
+         MultipartFile coursePdfFile) {
+
+      String pdfPath = fileStorageService.saveFile(coursePdfFile, trackingCode,
+            selectedCourseRequestDto.getCourseCode());
+
+      SelectedCourse selectedCourse = applicationMapper.toSelectedCourseEntity(selectedCourseRequestDto, pdfPath);
+
+      Application application = applicationRepo.findByTrackingCode(trackingCode);
+
+      application.getSelectedCourses().add(selectedCourse);
+      selectedCourse.setApplication(application);
+
+      return applicationMapper.toSelectedCourseResponseDto(selectedCourse);
+
+   }
+
+   @Transactional
+   public ApplicationResponseDto manageApplicationStatus(ApplicationStatus applicationStatus, String trackingCode) {
+
+      Application application = getApplicationEntity(trackingCode);
+
+      if (application.getApplicationStatus() == applicationStatus)
+         throw new DuplicateStatusException("application status is already same as in the database");
+
+      List<SelectedCourse> selectedCourses = application.getSelectedCourses().stream()
+            .filter(x -> x.getCourseExemptionReport().getExemptionStatus() == ExemptionStatus.PENDING).toList();
+
+      if (!selectedCourses.isEmpty())
+         throw new UnfilledStatusException("there are still pending status on the courses");
+
+      application.setApplicationStatus(applicationStatus);
+
+      return applicationMapper.toApplicationResponseDto(application);
+   }
+
+   @Transactional
+   public String findAcademicYearByTrackingCode(String trackingCode) {
+      return applicationRepo.findAcademicYearByTrackingCode(trackingCode);
+
+   }
+
+   @Transactional
+   public Application findByTrackingCode(String trackingCode) {
+      return applicationRepo.findByTrackingCode(trackingCode);
+
+   }
+
+   @Transactional
+   public void deleteCourse(String trackingCode, long courseId) {
+
+      Application application = findByTrackingCode(trackingCode);
+
+      SelectedCourse selectedCourse = application.getSelectedCourses().stream().filter(x -> x.getId() == courseId)
+            .findFirst().orElseThrow(() -> new ResourceNotFoundException("course not found with the id " + courseId));
+
+      application.getSelectedCourses().remove(selectedCourse);
    }
 
 }

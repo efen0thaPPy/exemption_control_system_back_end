@@ -20,10 +20,10 @@ public class ExemptionController {
 
     @PostMapping("/exemption")
     public ResponseEntity<List<ExemptionResponseDto>> exemptCourse(
-            @RequestParam String trackingCode, @RequestParam String courseCode)
+            @RequestParam String trackingCode, @RequestParam long courseId)
             throws IOException {
 
-        List<ExemptionResponseDto> exemptionResponseDto = exemptionService.exemptCourse(trackingCode, courseCode);
+        List<ExemptionResponseDto> exemptionResponseDto = exemptionService.exemptCourse(trackingCode, courseId);
 
         return ResponseEntity.ok(exemptionResponseDto);
 

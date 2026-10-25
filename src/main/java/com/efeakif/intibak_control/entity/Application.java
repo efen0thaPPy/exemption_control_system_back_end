@@ -1,5 +1,6 @@
 package com.efeakif.intibak_control.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.efeakif.intibak_control.enums.ApplicationStatus;
@@ -9,6 +10,7 @@ import com.efeakif.intibak_control.enums.Grade;
 import com.efeakif.intibak_control.enums.TransferType;
 
 import groovyjarjarantlr4.v4.runtime.misc.Nullable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -55,9 +57,18 @@ public class Application {
 
     private String transcriptPdfPath;
 
-    @ElementCollection
-    @CollectionTable(name = "application_courses", joinColumns = @JoinColumn(name = "application_id"), uniqueConstraints = @UniqueConstraint(columnNames = {
-            "application_id", "course_code" }))
+    @Column(nullable = false)
+    private String academicYear;
+
+    // @ElementCollection
+    // @CollectionTable(name = "application_courses", joinColumns = @JoinColumn(name
+    // = "application_id"), uniqueConstraints = @UniqueConstraint(columnNames = {
+    // "application_id", "course_code", "target_course_code" }))
+
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SelectedCourse> selectedCourses;
+
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LLMExemptionReport> llmExemptionReports = new ArrayList<>();
 
 }

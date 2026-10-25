@@ -10,27 +10,13 @@ import lombok.Data;
 @Data
 public class ExemptionResponseDto {
 
-    private String firstName;
-
-    private String lastName;
-
-    private String university;
-
     private String sourceCourseName;
 
     private String targetCourseName;
 
     private String academicYear;
 
-    private double sourceAkts;
-
-    private double targetAkts;
-
-    private Grade sourceGrade;
-
     private String llmReport;
-
-    private String sourceSemester;
 
     private String missingTopics;
 

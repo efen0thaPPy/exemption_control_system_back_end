@@ -57,6 +57,6 @@ public class ErciyesCourse {
     private double ects;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WeeklyContent> weeklyContents = new ArrayList<>();
+    private List<ErciyesWeeklyContent> weeklyContents = new ArrayList<>();
 
 }

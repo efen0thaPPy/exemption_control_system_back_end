@@ -38,4 +38,12 @@ public class ErciyesCourseService {
 
     }
 
+    public List<ErciyesCourseResponseDto> findByAcademicYear(String year) {
+
+        List<ErciyesCourse> courses = erciyesRepo.findByAcademicYear(year);
+
+        return courses.stream().map(x -> mapper.toDto(x)).toList();
+
+    }
+
 }

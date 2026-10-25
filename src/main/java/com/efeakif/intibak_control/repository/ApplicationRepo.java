@@ -13,22 +13,25 @@ import com.efeakif.intibak_control.enums.ApplicationStatus;
 
 public interface ApplicationRepo extends JpaRepository<Application, Long> {
 
-    List<Application> findByApplicationStatus(ApplicationStatus applicationStatus);
+        List<Application> findByApplicationStatus(ApplicationStatus applicationStatus);
 
-    Application findByTrackingCode(String trackingCode);
+        Application findByTrackingCode(String trackingCode);
 
-    @Query("select a.transcriptPdfPath from Application a where a.trackingCode=:trackingCode")
-    String findTranscriptPdfPathByTrackingCode(@Param("trackingCode") String trackingCode);
+        @Query("select a.transcriptPdfPath from Application a where a.trackingCode=:trackingCode")
+        String findTranscriptPdfPathByTrackingCode(@Param("trackingCode") String trackingCode);
 
-    @Query("select sc.coursePdfPath from Application a join a.selectedCourses sc where a.trackingCode=:trackingCode and sc.courseCode=:courseCode")
-    String findCourseContentPdfByTrackingCodeAndCourseCode(@Param("courseCode") String courseCode,
-            @Param("trackingCode") String trackingCode);
+        @Query("select sc.coursePdfPath from Application a join a.selectedCourses sc where a.trackingCode=:trackingCode and sc.id=:courseId")
+        String findCourseContentPdfByTrackingCodeAndCourseId(@Param("courseId") long courseId,
+                        @Param("trackingCode") String trackingCode);
 
-    @Query("select sc from Application a join a.selectedCourses sc where a.trackingCode=:trackingCode and sc.courseCode=:courseCode")
-    SelectedCourse findSelectedCourseByTrackingCodeAndCourseCode(@Param("trackingCode") String trackingCode,
-            @Param("courseCode") String courseCode);
+        @Query("select sc from Application a join a.selectedCourses sc where a.trackingCode=:trackingCode and sc.id=:courseId")
+        SelectedCourse findSelectedCourseByTrackingCodeAndCourseId(@Param("trackingCode") String trackingCode,
+                        @Param("courseId") long courseId);
 
-    @Query("select a.student from Application a where a.trackingCode=:trackingCode")
-    Student findStudentByTrackingCode(@Param("trackingCode") String trackingCode);
+        @Query("select a.student from Application a where a.trackingCode=:trackingCode")
+        Student findStudentByTrackingCode(@Param("trackingCode") String trackingCode);
+
+        @Query("select a.academicYear from Application a where a.trackingCode=:trackingCode")
+        String findAcademicYearByTrackingCode(@Param("trackingCode") String trackingCode);
 
 }

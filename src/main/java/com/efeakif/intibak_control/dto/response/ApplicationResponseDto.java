@@ -21,4 +21,6 @@ public class ApplicationResponseDto {
 
     private List<SelectedCourseResponse> selectedCourses;
 
+    private String academicYear;
+
 }

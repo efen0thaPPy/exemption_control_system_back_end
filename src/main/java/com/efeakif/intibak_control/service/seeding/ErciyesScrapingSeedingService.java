@@ -13,7 +13,8 @@ import org.stringtemplate.v4.ST;
 import org.jsoup.nodes.Element;
 
 import com.efeakif.intibak_control.entity.ErciyesCourse;
-import com.efeakif.intibak_control.entity.WeeklyContent;
+import com.efeakif.intibak_control.entity.ErciyesWeeklyContent;
+
 import com.efeakif.intibak_control.enums.CourseType;
 import com.efeakif.intibak_control.repository.ErciyesCourseRepo;
 
@@ -148,7 +149,7 @@ public class ErciyesScrapingSeedingService {
 
                 int weekNumber = Integer.parseInt(tds.get(0).text());
 
-                WeeklyContent weeklyContent = new WeeklyContent();
+                ErciyesWeeklyContent weeklyContent = new ErciyesWeeklyContent();
                 weeklyContent.setWeekNumber(weekNumber);
                 weeklyContent.setDescription((description));
                 weeklyContent.setCourse(course);
