@@ -47,7 +47,9 @@ public class ErciyesCourse {
 
     private int theoryHours;
 
-    private int semester;
+    private int semesterNumber;
+
+    private String semesterName;
 
     @Enumerated(EnumType.STRING)
     private CourseType courseType;

@@ -14,11 +14,7 @@ public class ErciyesCourseResponseDto {
 
     private String courseName;
 
-    private int practiceHours;
-
-    private int theoryHours;
-
-    private int semester;
+    private String semesterName;
 
     @Enumerated(EnumType.STRING)
     private CourseType courseType;

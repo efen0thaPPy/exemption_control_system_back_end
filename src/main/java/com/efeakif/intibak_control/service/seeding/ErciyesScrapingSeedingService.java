@@ -50,9 +50,7 @@ public class ErciyesScrapingSeedingService {
 
             for (Element sm : semesters) {
 
-                String[] parts = sm.text().split(" ");
-
-                semesterNames.add(parts[0].replace(".", "").trim());
+                semesterNames.add(sm.text());
 
             }
 
@@ -95,8 +93,14 @@ public class ErciyesScrapingSeedingService {
 
                     course.setAcademicYear(academicYear);
 
-                    course.setSemester(
-                            Integer.parseInt(semesterNames.get(count)));
+                    course.setSemesterName(semesterNames.get(count));
+
+                    String[] parts = semesterNames.get(count).split(" ");
+
+                    String semesterNumber = parts[0].replace(".", "").trim();
+
+                    course.setSemesterNumber(
+                            Integer.parseInt(semesterNumber));
 
                     Element a = tds.get(1).select("a").first();
 

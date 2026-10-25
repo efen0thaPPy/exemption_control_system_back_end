@@ -82,9 +82,7 @@ public class Mapper {
         erciyesCourseResponseDto.setCourseName(erciyes.getCourseName());
         erciyesCourseResponseDto.setCourseType(erciyes.getCourseType());
         erciyesCourseResponseDto.setEcts(erciyes.getEcts());
-        erciyesCourseResponseDto.setPracticeHours(erciyes.getPracticeHours());
-        erciyesCourseResponseDto.setSemester(erciyes.getSemester());
-        erciyesCourseResponseDto.setTheoryHours(erciyes.getTheoryHours());
+        erciyesCourseResponseDto.setSemesterName(erciyes.getSemesterName());
 
         return erciyesCourseResponseDto;
 

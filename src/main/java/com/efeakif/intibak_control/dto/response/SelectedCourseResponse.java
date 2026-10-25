@@ -11,11 +11,14 @@ import lombok.Data;
 
 @Data
 public class SelectedCourseResponse {
+
+    private long id;
+
     private String courseCode;
 
     private String courseName;
 
-    private String semester;
+    private String semesterName;
 
     private CourseLanguage courseLanguage;
 

@@ -14,7 +14,7 @@ public interface ErciyesCourseRepo extends JpaRepository<ErciyesCourse, Integer>
 
     List<ErciyesCourse> findByMaxAcademicYear();
 
-    @Query("select c from ErciyesCourse c where c.semester<=4 and c.academicYear=(Select max(c2.academicYear) from ErciyesCourse c2)")
+    @Query("select c from ErciyesCourse c where c.semesterNumber<=4 and c.academicYear=(Select max(c2.academicYear) from ErciyesCourse c2)")
     List<ErciyesCourse> findByMaxAcademicYearForVertical();
 
     @Query("select c from ErciyesCourse c where c.courseCode=:courseCode and c.academicYear=(Select max(c2.academicYear) from ErciyesCourse c2)")
