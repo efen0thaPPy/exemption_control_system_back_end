@@ -144,14 +144,14 @@ public class ApplicationController {
     }
 
     @PutMapping("/{trackingCode}/courses/{courseId}")
-    public ResponseEntity<SelectedCourseResponse> manageCourseStatus(
+    public ResponseEntity<SelectedCourseResponse> manageCourse(
 
-            @RequestParam(required = false) String newCourseCode,
+            @RequestParam(required = false) String newTargetCourseCode,
             @RequestParam(required = false) ExemptionStatus exemptionStatus,
             @PathVariable String trackingCode,
-            @PathVariable long courseId) {
+            @PathVariable long courseId) {     
 
-        SelectedCourseResponse selectedCourse = applicationService.manageCourseStatus(newCourseCode, exemptionStatus,
+        SelectedCourseResponse selectedCourse = applicationService.manageCourse(newTargetCourseCode, exemptionStatus,
                 trackingCode,
                 courseId);
 

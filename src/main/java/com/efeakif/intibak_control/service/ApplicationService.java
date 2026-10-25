@@ -106,12 +106,12 @@ public class ApplicationService {
                            erciyesCourse.getCourseName()));
             }
 
-            if (transferType == TransferType.VERTICAL_TRANSFER && erciyesCourse.getSemester() > 4) {
+            if (transferType == TransferType.VERTICAL_TRANSFER && erciyesCourse.getSemesterNumber() > 4) {
 
                validateResponseDto.addError(
                      String.format(
                            "The course you want your course exempted with (%s) is not in the first 4 semester (%s. semester) ",
-                           erciyesCourse.getCourseName(), erciyesCourse.getSemester()));
+                           erciyesCourse.getCourseName(), erciyesCourse.getSemesterNumber()));
 
             }
          }
@@ -250,20 +250,23 @@ public class ApplicationService {
    }
 
    @Transactional
-   public SelectedCourseResponse manageCourseStatus(String newTargetCourseCode, ExemptionStatus exemptionStatus,
+   public SelectedCourseResponse manageCourse(String newTargetCourseCode,
+         ExemptionStatus newExemptionStatus,
          String trackingCode,
          long courseId) {
 
       SelectedCourse selectedCourse = getCourseEntity(trackingCode, courseId);
 
-      String academicYear = findAcademicYearByTrackingCode(trackingCode);
-
-      if (selectedCourse == null)
+      if (selectedCourse == null) {
          throw new ResourceNotFoundException(String.format(
                "there is no course with the id %s in the application with the tracking code of %s", courseId,
                trackingCode));
+      }
 
-      if (newTargetCourseCode != null) {
+      if (newTargetCourseCode != null && !newTargetCourseCode.isBlank()) {
+
+         String academicYear = findAcademicYearByTrackingCode(trackingCode);
+
          ErciyesCourse erciyesCourse = erciyesRepo.findByAcademicYearAndCourseCode(academicYear, newTargetCourseCode);
          if (erciyesCourse == null)
             throw new ResourceNotFoundException("the target course couldn't be found");
@@ -271,22 +274,15 @@ public class ApplicationService {
          selectedCourse.getCourseExemptionReport().setTargetCourseCode(newTargetCourseCode);
       }
 
-      if (selectedCourse.getCourseExemptionReport().getExemptionStatus() == exemptionStatus) {
-         throw new DuplicateStatusException("exemption status is already same as in the database");
+      if (newExemptionStatus != null) {
+         if (selectedCourse.getCourseExemptionReport().getExemptionStatus() == newExemptionStatus)
+            throw new DuplicateStatusException("the exemptionstatus is already the same as in the database");
+
+         selectedCourse.getCourseExemptionReport().setExemptionStatus(newExemptionStatus);
 
       }
 
-      selectedCourse.getCourseExemptionReport().setExemptionStatus(exemptionStatus);
-
       return applicationMapper.toSelectedCourseResponseDto(selectedCourse);
-
-   }
-
-   @Transactional
-   public SelectedCourseResponse manageCourseStatus(ExemptionStatus exemptionStatus, String trackingCode,
-         long courseId) {
-
-      return manageCourseStatus(null, exemptionStatus, trackingCode, courseId);
 
    }
 
