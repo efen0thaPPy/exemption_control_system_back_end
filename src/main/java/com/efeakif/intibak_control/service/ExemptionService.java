@@ -71,13 +71,14 @@ public class ExemptionService {
    public List<ExemptionResponseDto> exemptCourse(String trackingCode, long courseId)
          throws IOException {
 
-      Application application = applicationService.findByTrackingCode(trackingCode);
+      exemptionRepo.deleteBySelectedCourse_Id(courseId);
 
       List<ExemptionResponseDto> responseDtos = new ArrayList<>();
 
+      Application application = applicationService.findByTrackingCode(trackingCode);
+
       StudentCourseDto studentCourseDto = applicationService.getStudentCourse(trackingCode, courseId);
 
-      Student student = studentCourseDto.student();
       SelectedCourse selectedCourse = studentCourseDto.selectedCourse();
 
       Resource pdf = fileStorageService.loadFile(selectedCourse.getCoursePdfPath());
@@ -117,6 +118,12 @@ public class ExemptionService {
       }
       return responseDtos;
 
+   }
+
+   public List<ExemptionResponseDto> getReports(long courseId) {
+      List<LLMExemptionReport> exemptionReports = exemptionRepo.findSelectedCourseByCourseId(courseId);
+
+      return exemptionReports.stream().map(x -> mapper.toDto(x)).toList();
    }
 
 }

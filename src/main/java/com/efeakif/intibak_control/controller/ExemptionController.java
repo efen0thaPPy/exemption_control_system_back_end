@@ -3,6 +3,7 @@ package com.efeakif.intibak_control.controller;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +25,17 @@ public class ExemptionController {
             throws IOException {
 
         List<ExemptionResponseDto> exemptionResponseDto = exemptionService.exemptCourse(trackingCode, courseId);
+
+        return ResponseEntity.ok(exemptionResponseDto);
+
+    }
+
+    @GetMapping("/exemption")
+    public ResponseEntity<List<ExemptionResponseDto>> getReports(
+            @RequestParam String trackingCode, @RequestParam long courseId)
+            throws IOException {
+
+        List<ExemptionResponseDto> exemptionResponseDto = exemptionService.getReports(courseId);
 
         return ResponseEntity.ok(exemptionResponseDto);
 
