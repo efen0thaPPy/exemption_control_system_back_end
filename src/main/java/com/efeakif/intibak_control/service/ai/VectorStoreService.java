@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.efeakif.intibak_control.dto.llm.CourseContentDto;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class VectorStoreService {
     private final VectorStore vectorStore;
+    private final JdbcTemplate jdbcTemplate;
 
     public void saveVectors(List<ErciyesCourse> courses) {
 
@@ -56,6 +58,11 @@ public class VectorStoreService {
         SearchRequest searchRequest = searchRequestBuilder.build();
 
         return vectorStore.similaritySearch(searchRequest);
+
+    }
+
+    public void clearTable() {
+        jdbcTemplate.execute("truncate table vector_store");
 
     }
 
