@@ -12,13 +12,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,14 +33,9 @@ public class LLMExemptionReport {
   @Column(name = "exemption_report_id")
   private int id;
 
-  @Column(nullable = false)
-  private String sourceCourseName;
-
-  @Column(nullable = false)
-  private String targetCourseName;
-
-  @Column(nullable = false)
-  private String academicYear;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "selected_course_id")
+  private SelectedCourse selectedCourse;
 
   @Column(columnDefinition = "TEXT")
   private String llmReport;
@@ -50,13 +46,13 @@ public class LLMExemptionReport {
   @Column(nullable = false)
   private Double vectorSimilarityPercent;
 
-  private String sourceSemester;
-
   @Column(nullable = false)
   private Double llmSimilarityPercent;
 
-  @ManyToOne
-  @JoinColumn(name = "application_id")
-  private Application application;
+  @Column(nullable = false)
+  private String courseCode;
+
+  @Column(nullable = false)
+  private String courseName;
 
 }

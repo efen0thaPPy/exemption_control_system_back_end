@@ -68,7 +68,6 @@ public class Application {
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SelectedCourse> selectedCourses;
 
-    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LLMExemptionReport> llmExemptionReports = new ArrayList<>();
+    
 
 }

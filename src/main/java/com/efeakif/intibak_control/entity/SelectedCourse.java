@@ -1,5 +1,6 @@
 package com.efeakif.intibak_control.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.efeakif.intibak_control.enums.CourseLanguage;
@@ -7,12 +8,14 @@ import com.efeakif.intibak_control.enums.CourseType;
 import com.efeakif.intibak_control.enums.ExemptionStatus;
 import com.efeakif.intibak_control.enums.Grade;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -54,10 +57,13 @@ public class SelectedCourse {
 
     private String coursePdfPath;
 
-    @Embedded
-    private CourseExemptionReport courseExemptionReport;
+    @OneToMany(mappedBy = "selectedCourse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LLMExemptionReport> llmExemptionReports = new ArrayList<>();
 
-    @ManyToOne
+    @Embedded
+    private CommitteeExemptionReport courseExemptionReport;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id")
     private Application application;
 

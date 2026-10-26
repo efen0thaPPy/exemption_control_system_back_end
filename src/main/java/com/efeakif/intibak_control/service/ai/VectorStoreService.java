@@ -30,6 +30,7 @@ public class VectorStoreService {
             String textToEmbed = course.getCourseName() + "\n\n" + String.join(", ", topics);
             Map<String, Object> metadata = Map.of(
                     "courseId", course.getId(),
+                    "courseCode", course.getCourseCode(),
                     "courseName", course.getCourseName(),
                     "academicYear", course.getAcademicYear(),
                     "akts", course.getEcts());

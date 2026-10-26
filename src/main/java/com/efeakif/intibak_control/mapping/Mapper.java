@@ -22,24 +22,20 @@ import com.efeakif.intibak_control.enums.Grade;
 @Component
 public class Mapper {
 
-    public LLMExemptionReport toEntity(ExemptionDto exemptionDto, Student student, SelectedCourse selectedCourse,
-            Document doc, Application application) {
+    public LLMExemptionReport toEntity(ExemptionDto exemptionDto, SelectedCourse selectedCourse,
+            Document doc) {
         LLMExemptionReport exemptionReport = new LLMExemptionReport();
 
         exemptionReport.setLlmReport(exemptionDto.getReport());
         exemptionReport.setLlmSimilarityPercent(exemptionDto.getSimilarityPercent());
+        exemptionReport.setMissingTopics(exemptionDto.getMissingTopics());
 
         double vectorPercent = Math.round(doc.getScore() * 100);
         exemptionReport.setVectorSimilarityPercent(vectorPercent);
-        exemptionReport.setSourceSemester(selectedCourse.getSemester());
+        exemptionReport.setSelectedCourse(selectedCourse);
 
-        exemptionReport.setMissingTopics(exemptionDto.getMissingTopics());
-        exemptionReport.setApplication(application);
-        exemptionReport.setSourceCourseName(selectedCourse.getCourseName());
-
-        exemptionReport.setTargetCourseName((String) doc.getMetadata().get("courseName"));
-
-        exemptionReport.setAcademicYear((String) doc.getMetadata().get("academicYear"));
+        exemptionReport.setCourseCode((String) doc.getMetadata().get("courseCode"));
+        exemptionReport.setCourseName((String) doc.getMetadata().get("courseName"));
 
         return exemptionReport;
 
@@ -56,10 +52,11 @@ public class Mapper {
         exemptionResponseDto.setVectorSimilarityPercent(exemptionReport.getVectorSimilarityPercent());
 
         exemptionResponseDto.setMissingTopics(exemptionReport.getMissingTopics());
-        exemptionResponseDto.setSourceCourseName(exemptionReport.getSourceCourseName());
 
-        exemptionResponseDto.setTargetCourseName(exemptionReport.getTargetCourseName());
-        exemptionResponseDto.setAcademicYear(exemptionReport.getAcademicYear());
+        exemptionResponseDto.setSourceCourseCode(exemptionReport.getSelectedCourse().getCourseCode());
+        exemptionResponseDto.setSourceCourseName(exemptionReport.getSelectedCourse().getCourseName());
+        exemptionResponseDto.setTargetCourseCode(exemptionReport.getCourseCode());
+        exemptionResponseDto.setTargetCourseName(exemptionReport.getCourseName());
 
         return exemptionResponseDto;
 

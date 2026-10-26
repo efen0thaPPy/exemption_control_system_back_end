@@ -107,7 +107,7 @@ public class ExemptionService {
          ExemptionDto exemptionDto = llmService.converse(AiModel.llama31, EXEMPTION_PROMPT, sourceText + targetText,
                ExemptionDto.class);
 
-         LLMExemptionReport exemptionReport = mapper.toEntity(exemptionDto, student, selectedCourse, doc, application);
+         LLMExemptionReport exemptionReport = mapper.toEntity(exemptionDto, selectedCourse, doc);
 
          exemptionRepo.save(exemptionReport);
 
